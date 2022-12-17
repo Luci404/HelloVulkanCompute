@@ -75,6 +75,8 @@ int main(int argc, char** argv)
 		.pQueuePriorities = queuePriorities.data()
 	};
 
+	VkPhysicalDeviceFeatures physicalDeviceFeatures{};
+
 	VkDeviceCreateInfo deviceCreateInfo{
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		.pNext = nullptr,
@@ -85,7 +87,7 @@ int main(int argc, char** argv)
 		.ppEnabledLayerNames = nullptr,
 		.enabledExtensionCount = 0,
 		.ppEnabledExtensionNames = nullptr,
-		.pEnabledFeatures = nullptr
+		.pEnabledFeatures = &physicalDeviceFeatures
 	};
 
 	VkDevice logicalDevice;

@@ -52,7 +52,6 @@ int main(int argc, char** argv)
 		<< VK_VERSION_PATCH(physicalDeviceProperties.apiVersion) << std::endl;
 	std::cout << "Max compute shared memory size: " << physicalDeviceProperties.limits.maxComputeSharedMemorySize << std::endl;
 
-	
 	// Compute queue family index.
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
@@ -157,6 +156,10 @@ int main(int argc, char** argv)
 		.pCode = reinterpret_cast<const uint32_t*>(shaderContents.data()),
 	};
 
+	VkShaderModule shaderModule;
+	assert(vkCreateShaderModule(logicalDevice, &shaderModuleCreateInfo, nullptr, &shaderModule) == VK_SUCCESS);
+
+	// Descriptor set layout.
 	const std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBinding = {
 		{
 			.binding = 0,
@@ -172,68 +175,199 @@ int main(int argc, char** argv)
 		},
 	};
 
-	// Cleanup.
-	vkDestroyDevice(logicalDevice, nullptr);
-	vkDestroyInstance(instance, nullptr);
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBinding.size()),
+		.pBindings = descriptorSetLayoutBinding.data()
+	};
 
-	/*
-	
-	// Descriptor set layout.
-	const std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBinding = {
-		{0, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute},
-		{1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute} };
-	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(vk::DescriptorSetLayoutCreateFlags(), descriptorSetLayoutBinding);
-	vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo);
+	VkDescriptorSetLayout descriptorSetLayout;
+	assert(vkCreateDescriptorSetLayout(logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout) == VK_SUCCESS);
 
 	// Pipeline layout.
-	vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo(vk::PipelineLayoutCreateFlags(), descriptorSetLayout);
-	vk::PipelineLayout pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
-	vk::PipelineCache pipelineCache = device.createPipelineCache(vk::PipelineCacheCreateInfo());
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.setLayoutCount = 1,
+		.pSetLayouts = &descriptorSetLayout,
+		.pushConstantRangeCount = 0,
+		.pPushConstantRanges = nullptr,
+	};
+
+	VkPipelineLayout pipelineLayout;
+	assert(vkCreatePipelineLayout(logicalDevice, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) == VK_SUCCESS);
+
+	VkPipelineCacheCreateInfo pipelineCacheCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.initialDataSize = 0,
+		.pInitialData = nullptr
+	};
+
+	VkPipelineCache pipelineCache;
+	assert(vkCreatePipelineCache(logicalDevice, &pipelineCacheCreateInfo, nullptr, &pipelineCache) == VK_SUCCESS);
 
 	// Piepline.
-	vk::PipelineShaderStageCreateInfo pipelineShaderCreateInfo(vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eCompute, shaderModule, "Main");
-	vk::ComputePipelineCreateInfo computePipelineCreateInfo(vk::PipelineCreateFlags(), pipelineShaderCreateInfo, pipelineLayout);
-	vk::Pipeline computePipeline = device.createComputePipeline(pipelineCache, computePipelineCreateInfo).value;
+	VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.stage = VK_SHADER_STAGE_COMPUTE_BIT,
+		.module = shaderModule,
+		.pName = "Main",
+		.pSpecializationInfo = VK_NULL_HANDLE,
+	};
+
+	VkComputePipelineCreateInfo computePipelineCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.stage = pipelineShaderStageCreateInfo,
+		.layout = pipelineLayout,
+		.basePipelineHandle = VK_NULL_HANDLE,
+		.basePipelineIndex = 0,
+	};
+
+	VkPipeline computePipeline;
+	assert(vkCreateComputePipelines(logicalDevice, pipelineCache, 0, &computePipelineCreateInfo, nullptr, &computePipeline) == VK_SUCCESS);
 
 	// Descriptor set.
-	vk::DescriptorPoolSize descriptorPoolSize(vk::DescriptorType::eStorageBuffer, 2);
-	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo(vk::DescriptorPoolCreateFlags(), 1, descriptorPoolSize);
-	vk::DescriptorPool descriptorPool = device.createDescriptorPool(descriptorPoolCreateInfo);
+	VkDescriptorPoolSize descriptorPoolSize{
+		.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		.descriptorCount = 2,
+	};
 
-	vk::DescriptorSetAllocateInfo descriptorSetAllocInfo(descriptorPool, 1, &descriptorSetLayout);
-	const std::vector<vk::DescriptorSet> descriptorSets = device.allocateDescriptorSets(descriptorSetAllocInfo);
-	vk::DescriptorSet descriptorSet = descriptorSets.front();
-	vk::DescriptorBufferInfo inBufferInfo(inBuffer, 0, numElements * sizeof(int32_t));
-	vk::DescriptorBufferInfo outBufferInfo(outBuffer, 0, numElements * sizeof(int32_t));
+	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.maxSets = 1,
+		.poolSizeCount = 1,
+		.pPoolSizes = &descriptorPoolSize,
+	};
 
-	const std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {
-		{ descriptorSet, 0, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &inBufferInfo},
-		{ descriptorSet, 1, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &outBufferInfo} };
-	device.updateDescriptorSets(writeDescriptorSets, {});
+	VkDescriptorPool descriptorPool;
+	assert(vkCreateDescriptorPool(logicalDevice, &descriptorPoolCreateInfo, nullptr, &descriptorPool) == VK_SUCCESS);
+
+	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.descriptorPool = descriptorPool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &descriptorSetLayout,
+	};
+
+	std::vector<VkDescriptorSet> descriptorSets(descriptorSetAllocateInfo.descriptorSetCount);
+	assert(vkAllocateDescriptorSets(logicalDevice, &descriptorSetAllocateInfo, &descriptorSets[0]) == VK_SUCCESS);
+	VkDescriptorSet descriptorSet = descriptorSets.front();
+
+
+	VkDescriptorBufferInfo inputDescriptorBufferInfo{
+		.buffer = inBuffer,
+		.offset = 0,
+		.range = numElements * sizeof(int32_t)
+	};
+
+	VkDescriptorBufferInfo outputDescriptorBufferInfo{
+		.buffer = outBuffer,
+		.offset = 0,
+		.range = numElements * sizeof(int32_t)
+	};
+
+	std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
+		{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.pNext = nullptr,
+			.dstSet = descriptorSet,
+			.dstBinding = 0,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			.pImageInfo = nullptr,
+			.pBufferInfo = &inputDescriptorBufferInfo,
+			.pTexelBufferView = nullptr,
+		},
+		{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.pNext = nullptr,
+			.dstSet = descriptorSet,
+			.dstBinding = 1,
+			.dstArrayElement = 0,
+			.descriptorCount = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			.pImageInfo = nullptr,
+			.pBufferInfo = &outputDescriptorBufferInfo,
+			.pTexelBufferView = nullptr,
+		}
+	};
+
+	vkUpdateDescriptorSets(logicalDevice, 2, &writeDescriptorSets[0], 0, nullptr);
 
 	// Submit to GPU.
-	vk::CommandPoolCreateInfo commandPoolCreateInfo(vk::CommandPoolCreateFlags(), computeQueueFamilyIndex);
-	vk::CommandPool commandPool = device.createCommandPool(commandPoolCreateInfo);
+	VkCommandPoolCreateInfo commandPoolCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.queueFamilyIndex = computeQueueFamilyIndex
+	};
 
-	vk::CommandBufferAllocateInfo commandBufferAllocInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1);
-	const std::vector<vk::CommandBuffer> commandBuffers = device.allocateCommandBuffers(commandBufferAllocInfo);
-	vk::CommandBuffer commandBuffer = commandBuffers.front();
+	VkCommandPool commandPool;
+	assert(vkCreateCommandPool(logicalDevice, &commandPoolCreateInfo, nullptr, &commandPool) == VK_SUCCESS);
+
+
+	VkCommandBufferAllocateInfo commandBufferAllocateInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.pNext = nullptr,
+		.commandPool = commandPool,
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandBufferCount = 1,
+	};
+
+	VkCommandBuffer commandBuffer;
+	assert(vkAllocateCommandBuffers(logicalDevice, &commandBufferAllocateInfo, &commandBuffer) == VK_SUCCESS);
 
 	// Record commands.
-	vk::CommandBufferBeginInfo cmdBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-	commandBuffer.begin(cmdBufferBeginInfo);
-	commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline);
-	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, 0, { descriptorSet }, {});
-	commandBuffer.dispatch(numElements, 1, 1);
-	commandBuffer.end();
+	VkCommandBufferBeginInfo commandBufferBeginInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.pNext = nullptr,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		.pInheritanceInfo = nullptr,
+	};
+	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+	vkCmdDispatch(commandBuffer, numElements, 1, 1);
+	vkEndCommandBuffer(commandBuffer);
 
-	vk::Queue queue = device.getQueue(computeQueueFamilyIndex, 0);
-	vk::Fence fence = device.createFence(vk::FenceCreateInfo());
+	VkQueue queue;
+	vkGetDeviceQueue(logicalDevice, computeQueueFamilyIndex, 0, &queue);
 
-	vk::SubmitInfo SubmitInfo(0, nullptr, nullptr, 1, &commandBuffer);
-	queue.submit({ SubmitInfo }, fence);
-	vk::Result result = device.waitForFences({ fence }, true, uint64_t(-1));
-	assert(result == vk::Result::eSuccess);
+	VkFenceCreateInfo fenceCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+	};
+	VkFence fence;
+	vkCreateFence(logicalDevice, &fenceCreateInfo, nullptr, &fence);
+
+	VkSubmitInfo submitInfo{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.pNext = nullptr,
+		.waitSemaphoreCount = 0,
+		.pWaitSemaphores = nullptr,
+		.pWaitDstStageMask = nullptr,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &commandBuffer,
+		.signalSemaphoreCount = 0,
+		.pSignalSemaphores = nullptr,
+	};
+
+	vkQueueSubmit(queue, 0, &submitInfo, fence);
+	assert(vkWaitForFences(logicalDevice, 1, &fence, true, -1) == VK_SUCCESS);
 
 	// Read results.
 	vmaMapMemory(allocator, inBufferAllocation, reinterpret_cast<void**>(&inBufferPtr));
@@ -315,19 +449,19 @@ int main(int argc, char** argv)
 	vmaDestroyBuffer(allocator, outBuffer, outBufferAllocation);
 	vmaDestroyAllocator(allocator);
 
-	// Cleaning.
-	device.resetCommandPool(commandPool, vk::CommandPoolResetFlags());
-	device.destroyFence(fence);
-	device.destroyDescriptorSetLayout(descriptorSetLayout);
-	device.destroyPipelineLayout(pipelineLayout);
-	device.destroyPipelineCache(pipelineCache);
-	device.destroyShaderModule(shaderModule);
-	device.destroyPipeline(computePipeline);
-	device.destroyDescriptorPool(descriptorPool);
-	device.destroyCommandPool(commandPool);
+	// Cleanup.
+	vkResetCommandPool(logicalDevice, commandPool, 0);
+	vkDestroyFence(logicalDevice, fence, nullptr);
+	vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
+	vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
+	vkDestroyPipelineCache(logicalDevice, pipelineCache, nullptr);
+	vkDestroyShaderModule(logicalDevice, shaderModule, nullptr);
+	vkDestroyPipeline(logicalDevice, computePipeline, nullptr);
+	vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
+	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
 
-	device.destroy();
-	instance.destroy();*/
+	vkDestroyDevice(logicalDevice, nullptr);
+	vkDestroyInstance(instance, nullptr);
 
 	return 0;
 }

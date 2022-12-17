@@ -1,0 +1,1 @@
+/c/VulkanSDK/1.2.170.0/Bin/dxc -T cs_6_0 -E "Main" -spirv -fvk-use-dx-layout -fspv-target-env=vulkan1.1 -Fo square.spv square.hlsl

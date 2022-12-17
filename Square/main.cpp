@@ -10,12 +10,35 @@
 
 int main(int argc, char** argv)
 {
-	// Initialize instance and application
-	vk::ApplicationInfo applicationInfo{ "HelloVulkanHpp", 1, nullptr, 0, VK_API_VERSION_1_1 };
-	const std::vector<const char*> layers = { "VK_LAYER_KHRONOS_validation" };
-	vk::InstanceCreateInfo instanceCreateInfo(vk::InstanceCreateFlags(), &applicationInfo, layers, {});
-	vk::Instance instance = vk::createInstance(instanceCreateInfo);
+	// Create instance.
+	VkApplicationInfo applicationInfo {
+		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+		.pNext = nullptr,
+		.pApplicationName = "Square",
+		.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+		.pEngineName = "None",
+		.engineVersion = VK_MAKE_VERSION(1, 0, 0),
+		.apiVersion = VK_API_VERSION_1_1
+	};
 
+	VkInstanceCreateInfo instanceCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.pApplicationInfo = &applicationInfo,
+		.enabledLayerCount = 0,
+		.ppEnabledLayerNames = nullptr,
+		.enabledExtensionCount = 0,
+		.ppEnabledExtensionNames = nullptr
+	};
+
+	VkInstance instance;
+	VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
+
+
+	vkDestroyInstance(instance, nullptr);
+
+	/*
 	// Find physical device.
 	vk::PhysicalDevice physicalDevice = instance.enumeratePhysicalDevices().front();
 	vk::PhysicalDeviceProperties physicalDeviceProperties = physicalDevice.getProperties();
@@ -236,7 +259,7 @@ int main(int argc, char** argv)
 	device.destroyCommandPool(commandPool);
 
 	device.destroy();
-	instance.destroy();
+	instance.destroy();*/
 
 	return 0;
 }

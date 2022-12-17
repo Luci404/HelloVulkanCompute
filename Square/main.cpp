@@ -93,27 +93,30 @@ int main(int argc, char** argv)
 	VkDevice logicalDevice;
 	assert(vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice) == VK_SUCCESS);
 
-	vkDestroyDevice(logicalDevice, nullptr);
-	vkDestroyInstance(instance, nullptr);
-
-	/*
-
-	
-
-	// Allocate memory (aka. create buffers).
+	// Allocate buffers.
 	const uint32_t numElements = 10;
 	const uint32_t bufferSize = numElements * sizeof(int32_t);
 
-	vk::BufferCreateInfo bufferCreateInfo(vk::BufferCreateFlags(), bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vk::SharingMode::eExclusive, 1, &computeQueueFamilyIndex);
-	
-	VmaAllocatorCreateInfo allocatorInfo = {};
-	allocatorInfo.vulkanApiVersion = physicalDeviceProperties.apiVersion;
-	allocatorInfo.physicalDevice = physicalDevice;
-	allocatorInfo.device = device;
-	allocatorInfo.instance = instance;
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.size = bufferSize,
+		.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.queueFamilyIndexCount = 1,
+		.pQueueFamilyIndices = &computeQueueFamilyIndex
+	};
+
+	VmaAllocatorCreateInfo allocatorCreateInfo{
+		.physicalDevice = physicalDevice,
+		.device = logicalDevice,
+		.instance = instance,
+		.vulkanApiVersion = physicalDeviceProperties.apiVersion
+	};
 
 	VmaAllocator allocator;
-	vmaCreateAllocator(&allocatorInfo, &allocator);
+	vmaCreateAllocator(&allocatorCreateInfo, &allocator);
 
 	VkBuffer inBufferRaw;
 	VkBuffer outBufferRaw;
@@ -128,8 +131,8 @@ int main(int argc, char** argv)
 	VmaAllocation outBufferAllocation;
 	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &outBufferRaw, &outBufferAllocation, nullptr);
 
-	vk::Buffer inBuffer = inBufferRaw;
-	vk::Buffer outBuffer = outBufferRaw;
+	VkBuffer inBuffer = inBufferRaw;
+	VkBuffer outBuffer = outBufferRaw;
 
 	int32_t* inBufferPtr = nullptr;
 	vmaMapMemory(allocator, inBufferAllocation, reinterpret_cast<void**>(&inBufferPtr));
@@ -146,9 +149,35 @@ int main(int argc, char** argv)
 		shaderFile.read(shaderContents.data(), fileSize);
 	}
 
-	vk::ShaderModuleCreateInfo shaderModuleCreateInfo(vk::ShaderModuleCreateFlags(), shaderContents.size(), reinterpret_cast<const uint32_t*>(shaderContents.data()));
-	vk::ShaderModule shaderModule = device.createShaderModule(shaderModuleCreateInfo);
+	VkShaderModuleCreateInfo shaderModuleCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.codeSize = shaderContents.size(),
+		.pCode = reinterpret_cast<const uint32_t*>(shaderContents.data()),
+	};
 
+	const std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBinding = {
+		{
+			.binding = 0,
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			.descriptorCount = 1,
+			.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT
+		},
+		{
+			.binding = 1,
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			.descriptorCount = 1,
+			.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT
+		},
+	};
+
+	// Cleanup.
+	vkDestroyDevice(logicalDevice, nullptr);
+	vkDestroyInstance(instance, nullptr);
+
+	/*
+	
 	// Descriptor set layout.
 	const std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBinding = {
 		{0, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute},

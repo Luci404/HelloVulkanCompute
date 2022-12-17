@@ -35,6 +35,21 @@ int main(int argc, char** argv)
 	VkInstance instance;
 	VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
 
+	// Physical device.
+	uint32_t physicalDeviceCount = 0;
+	vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
+	assert(physicalDeviceCount > 0 && "Failed to find GPUs with Vulkan support!");
+	std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+	vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
+	VkPhysicalDevice physicalDevice = physicalDevices.front();
+	VkPhysicalDeviceProperties physicalDeviceProperties;
+	vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+	std::cout << "Device name: " << physicalDeviceProperties.deviceName << std::endl;
+	std::cout << "Vulkan version: "
+		<< VK_VERSION_MAJOR(physicalDeviceProperties.apiVersion) << "."
+		<< VK_VERSION_MINOR(physicalDeviceProperties.apiVersion) << "."
+		<< VK_VERSION_PATCH(physicalDeviceProperties.apiVersion) << std::endl;
+	std::cout << "Max compute shared memory size: " << physicalDeviceProperties.limits.maxComputeSharedMemorySize << std::endl;
 
 	vkDestroyInstance(instance, nullptr);
 

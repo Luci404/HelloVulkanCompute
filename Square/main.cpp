@@ -11,7 +11,7 @@
 int main(int argc, char** argv)
 {
 	// Create instance.
-	VkApplicationInfo applicationInfo {
+	VkApplicationInfo applicationInfo{
 		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 		.pNext = nullptr,
 		.pApplicationName = "Square",
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 	};
 
 	VkInstance instance;
-	VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
+	assert(vkCreateInstance(&instanceCreateInfo, nullptr, &instance) == VK_SUCCESS);
 
 	// Physical device.
 	uint32_t physicalDeviceCount = 0;
@@ -42,6 +42,7 @@ int main(int argc, char** argv)
 	std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
 	vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
 	VkPhysicalDevice physicalDevice = physicalDevices.front();
+
 	VkPhysicalDeviceProperties physicalDeviceProperties;
 	vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 	std::cout << "Device name: " << physicalDeviceProperties.deviceName << std::endl;
@@ -51,30 +52,51 @@ int main(int argc, char** argv)
 		<< VK_VERSION_PATCH(physicalDeviceProperties.apiVersion) << std::endl;
 	std::cout << "Max compute shared memory size: " << physicalDeviceProperties.limits.maxComputeSharedMemorySize << std::endl;
 
-	vkDestroyInstance(instance, nullptr);
+	
+	// Compute queue family index.
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
-	/*
-	// Find physical device.
-	vk::PhysicalDevice physicalDevice = instance.enumeratePhysicalDevices().front();
-	vk::PhysicalDeviceProperties physicalDeviceProperties = physicalDevice.getProperties();
-	std::cout << "Device name: " << physicalDeviceProperties.deviceName << std::endl;
-	std::cout << "Vulkan version: " << VK_VERSION_MAJOR(physicalDeviceProperties.apiVersion) << "."
-		<< VK_VERSION_MINOR(physicalDeviceProperties.apiVersion) << "."
-		<< VK_VERSION_PATCH(physicalDeviceProperties.apiVersion) << std::endl;
-	std::cout << "Max compute shared memory size: " << physicalDeviceProperties.limits.maxComputeSharedMemorySize << std::endl;
-
-	// Find compute queue family index.
-	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 	auto computeQueueFamilyIterator = std::find_if(queueFamilyProperties.begin(), queueFamilyProperties.end(),
-		[](const vk::QueueFamilyProperties& p) { return p.queueFlags & vk::QueueFlagBits::eCompute; });
+		[](const VkQueueFamilyProperties& p) { return p.queueFlags & VK_QUEUE_COMPUTE_BIT; });
 	const uint32_t computeQueueFamilyIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), computeQueueFamilyIterator));
 	std::cout << "Compute Queue Family Index: " << computeQueueFamilyIndex << std::endl;
 
 	// Create logical device.
-	const float queuePriority = 1.0f;
-	vk::DeviceQueueCreateInfo deviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), computeQueueFamilyIndex, 1, &queuePriority);
-	vk::DeviceCreateInfo deviceCreateInfo(vk::DeviceCreateFlags(), deviceQueueCreateInfo);
-	vk::Device device = physicalDevice.createDevice(deviceCreateInfo);
+	const std::vector<float> queuePriorities = { 1.0f };
+	VkDeviceQueueCreateInfo deviceQueueCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.queueFamilyIndex = computeQueueFamilyIndex,
+		.queueCount = 1,
+		.pQueuePriorities = queuePriorities.data()
+	};
+
+	VkDeviceCreateInfo deviceCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.queueCreateInfoCount = 1,
+		.pQueueCreateInfos = &deviceQueueCreateInfo,
+		.enabledLayerCount = 0,
+		.ppEnabledLayerNames = nullptr,
+		.enabledExtensionCount = 0,
+		.ppEnabledExtensionNames = nullptr,
+		.pEnabledFeatures = nullptr
+	};
+
+	VkDevice logicalDevice;
+	assert(vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice) == VK_SUCCESS);
+
+	vkDestroyDevice(logicalDevice, nullptr);
+	vkDestroyInstance(instance, nullptr);
+
+	/*
+
+	
 
 	// Allocate memory (aka. create buffers).
 	const uint32_t numElements = 10;

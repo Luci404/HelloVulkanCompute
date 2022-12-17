@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 	// Create logical device.
 	const std::vector<float> queuePriorities = { 1.0f };
 	VkDeviceQueueCreateInfo deviceQueueCreateInfo{
-		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+		.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO ,
 		.pNext = nullptr,
 		.flags = 0,
 		.queueFamilyIndex = computeQueueFamilyIndex,

@@ -2,6 +2,7 @@
 #include <cassert>
 #include <fstream>
 
+#include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
 
 #define VMA_IMPLEMENTATION
@@ -72,44 +73,6 @@ int main(int argc, char** argv)
 	vmaMapMemory(allocator, inBufferAllocation, reinterpret_cast<void**>(&inBufferPtr));
 	for (int32_t i = 0; i < numElements; ++i) inBufferPtr[i] = i;
 	vmaUnmapMemory(allocator, inBufferAllocation);
-	
-	/*vk::Buffer inBuffer = device.createBuffer(bufferCreateInfo);
-	vk::Buffer outBuffer = device.createBuffer(bufferCreateInfo);
-
-	vk::MemoryRequirements inBufferMemoryRequirements = device.getBufferMemoryRequirements(inBuffer);
-	vk::MemoryRequirements outBufferMemoryRequirements = device.getBufferMemoryRequirements(outBuffer);
-
-	vk::PhysicalDeviceMemoryProperties memoryProperties = physicalDevice.getMemoryProperties();
-
-	uint32_t memoryTypeIndex = uint32_t(~0);
-	vk::DeviceSize memoryHeapSize = uint32_t(~0);
-	for (uint32_t currentMemoryTypeIndex = 0; currentMemoryTypeIndex < memoryProperties.memoryTypeCount; ++currentMemoryTypeIndex)
-	{
-		vk::MemoryType memoryType = memoryProperties.memoryTypes[currentMemoryTypeIndex];
-		if ((vk::MemoryPropertyFlagBits::eHostVisible & memoryType.propertyFlags) &&
-			(vk::MemoryPropertyFlagBits::eHostCoherent & memoryType.propertyFlags))
-		{
-			memoryHeapSize = memoryProperties.memoryHeaps[memoryType.heapIndex].size;
-			memoryTypeIndex = currentMemoryTypeIndex;
-			break;
-		}
-	}
-
-	std::cout << "Memory Type Index: " << memoryTypeIndex << std::endl;
-	std::cout << "Memory Heap Size : " << memoryHeapSize / 1024 / 1024 / 1024 << " GB" << std::endl;
-
-	vk::MemoryAllocateInfo inBufferMemoryAllocateInfo(inBufferMemoryRequirements.size, memoryTypeIndex);
-	vk::MemoryAllocateInfo outBufferMemoryAllocateInfo(outBufferMemoryRequirements.size, memoryTypeIndex);
-	vk::DeviceMemory inBufferMemory = device.allocateMemory(inBufferMemoryAllocateInfo);
-	vk::DeviceMemory outBufferMemory = device.allocateMemory(inBufferMemoryAllocateInfo);
-
-	// Get a mapped pointer to the memory that can be used to copy data from the host to the device. Fill the inBuffer.
-	int32_t* inBufferPtr = static_cast<int32_t*>(device.mapMemory(inBufferMemory, 0, bufferSize));
-	for (int32_t i = 0; i < numElements; ++i) inBufferPtr[i] = i;
-	device.unmapMemory(inBufferMemory);
-
-	device.bindBufferMemory(inBuffer, inBufferMemory, 0);
-	device.bindBufferMemory(outBuffer, outBufferMemory, 0);*/
 
 	// Create compute pipeline.
 	std::vector<char> shaderContents;
@@ -245,15 +208,7 @@ int main(int argc, char** argv)
 	DestroyBuffer(B2);
 	DestroyBuffer(B3);
 	DestroyBuffer(B4);
-	/*inBufferPtr = static_cast<int32_t*>(device.mapMemory(inBufferMemory, 0, bufferSize));
-	for (uint32_t i = 0; i < numElements; ++i) std::cout << inBufferPtr[i] << " ";
-	std::cout << std::endl;
-	device.unmapMemory(inBufferMemory);
 
-	int32_t* outBufferPtr = static_cast<int32_t*>(device.mapMemory(outBufferMemory, 0, bufferSize));
-	for (uint32_t i = 0; i < numElements; ++i) std::cout << outBufferPtr[i] << " ";
-	std::cout << std::endl;
-	device.unmapMemory(outBufferMemory);*/
 
 	{
 		char* statisticsString = nullptr;
@@ -279,10 +234,7 @@ int main(int argc, char** argv)
 	device.destroyPipeline(computePipeline);
 	device.destroyDescriptorPool(descriptorPool);
 	device.destroyCommandPool(commandPool);
-	/*device.freeMemory(inBufferMemory);
-	device.freeMemory(outBufferMemory);
-	device.destroyBuffer(inBuffer);
-	device.destroyBuffer(outBuffer);*/
+
 	device.destroy();
 	instance.destroy();
 

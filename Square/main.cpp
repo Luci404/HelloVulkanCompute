@@ -42,7 +42,16 @@ int main(int argc, char** argv)
 	const uint32_t numElements = 10;
 	const uint32_t bufferSize = numElements * sizeof(int32_t);
 
-	vk::BufferCreateInfo bufferCreateInfo(vk::BufferCreateFlags(), bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vk::SharingMode::eExclusive, 1, &computeQueueFamilyIndex);
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.size = bufferSize,
+		.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.queueFamilyIndexCount = 1,
+		.pQueueFamilyIndices = &computeQueueFamilyIndex
+	};
 
 	VmaAllocatorCreateInfo allocatorInfo = {};
 	allocatorInfo.vulkanApiVersion = applicationInfo.apiVersion;
@@ -60,11 +69,11 @@ int main(int argc, char** argv)
 	allocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
 	VmaAllocation inBufferAllocation;
-	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &inBuffer, &inBufferAllocation, nullptr);
+	vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationInfo, &inBuffer, &inBufferAllocation, nullptr);
 
 	allocationInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
 	VmaAllocation outBufferAllocation;
-	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &outBuffer, &outBufferAllocation, nullptr);
+	vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationInfo, &outBuffer, &outBufferAllocation, nullptr);
 
 	int32_t* inBufferPtr = nullptr;
 	vmaMapMemory(allocator, inBufferAllocation, reinterpret_cast<void**>(&inBufferPtr));

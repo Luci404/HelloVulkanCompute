@@ -53,21 +53,18 @@ int main(int argc, char** argv)
 	VmaAllocator allocator;
 	vmaCreateAllocator(&allocatorInfo, &allocator);
 
-	VkBuffer inBufferRaw;
-	VkBuffer outBufferRaw;
+	VkBuffer inBuffer;
+	VkBuffer outBuffer;
 
 	VmaAllocationCreateInfo allocationInfo = {};
 	allocationInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
 	VmaAllocation inBufferAllocation;
-	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &inBufferRaw, &inBufferAllocation, nullptr);
+	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &inBuffer, &inBufferAllocation, nullptr);
 
 	allocationInfo.usage = VMA_MEMORY_USAGE_GPU_TO_CPU;
 	VmaAllocation outBufferAllocation;
-	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &outBufferRaw, &outBufferAllocation, nullptr);
-
-	vk::Buffer inBuffer = inBufferRaw;
-	vk::Buffer outBuffer = outBufferRaw;
+	vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &outBuffer, &outBufferAllocation, nullptr);
 
 	int32_t* inBufferPtr = nullptr;
 	vmaMapMemory(allocator, inBufferAllocation, reinterpret_cast<void**>(&inBufferPtr));
@@ -112,8 +109,8 @@ int main(int argc, char** argv)
 	vk::DescriptorSetAllocateInfo descriptorSetAllocInfo(descriptorPool, 1, &descriptorSetLayout);
 	const std::vector<vk::DescriptorSet> descriptorSets = device.allocateDescriptorSets(descriptorSetAllocInfo);
 	vk::DescriptorSet descriptorSet = descriptorSets.front();
-	vk::DescriptorBufferInfo inBufferInfo(inBuffer, 0, numElements * sizeof(int32_t));
-	vk::DescriptorBufferInfo outBufferInfo(outBuffer, 0, numElements * sizeof(int32_t));
+	vk::DescriptorBufferInfo inBufferInfo(*reinterpret_cast<vk::Buffer*>(&inBuffer), 0, numElements * sizeof(int32_t));
+	vk::DescriptorBufferInfo outBufferInfo(*reinterpret_cast<vk::Buffer*>(&outBuffer), 0, numElements * sizeof(int32_t));
 
 	const std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {
 		{ descriptorSet, 0, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &inBufferInfo},
@@ -170,6 +167,7 @@ int main(int argc, char** argv)
 	device.destroyPipeline(computePipeline);
 	device.destroyDescriptorPool(descriptorPool);
 	device.destroyCommandPool(commandPool);
+
 	device.destroy();
 	instance.destroy();
 

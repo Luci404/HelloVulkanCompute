@@ -3,10 +3,73 @@
 #include <fstream>
 
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan.hpp>
 
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
+
+VkResult CreateDebugUtilsMessengerEXT(VkInstance& instance,
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+	const VkAllocationCallbacks* pAllocator,
+	VkDebugUtilsMessengerEXT* pDebugMessenger)
+{
+	//pointer to the function, as it is not part of the core. Function creates debugging messenger
+	PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	if (func != NULL) {
+		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+	}
+	else {
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+}
+
+
+void DestroyDebugUtilsMessengerEXT(VkInstance& instance, VkDebugUtilsMessengerEXT& debugMessenger, const VkAllocationCallbacks* pAllocator) {
+	//pointer to the function, as it is not part of the core. Function destroys debugging messenger
+	PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	if (func != NULL) {
+		func(instance, debugMessenger, pAllocator);
+	}
+}
+
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
+{
+	printf("validation layer: %s\n", pCallbackData->pMessage);
+	return VK_FALSE;
+}
+
+VkResult
+setup_DebugUtilsMessenger(VkInstance instance,
+	VkDebugUtilsMessengerEXT* debugUtilsMessenger)
+{
+	//function that sets up the debugging messenger 
+
+	VkDebugUtilsMessengerCreateInfoEXT
+		debugUtilsMessengerCreateInfo = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+			(const void*)NULL,
+			(VkDebugUtilsMessengerCreateFlagsEXT)0,
+			(VkDebugUtilsMessageSeverityFlagsEXT)VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+			(VkDebugUtilsMessageTypeFlagsEXT)VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+			(PFN_vkDebugUtilsMessengerCallbackEXT)debugCallback,
+			(void*)NULL };
+
+	PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
+	if (func != NULL) {
+		if (func(instance, &debugUtilsMessengerCreateInfo, NULL, debugUtilsMessenger) != VK_SUCCESS) {
+			return VK_ERROR_INITIALIZATION_FAILED;
+		}
+	}
+	else {
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+	return VK_SUCCESS;
+}
 
 int main(int argc, char** argv)
 {
@@ -18,22 +81,36 @@ int main(int argc, char** argv)
 		.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
 		.pEngineName = "None",
 		.engineVersion = VK_MAKE_VERSION(1, 0, 0),
-		.apiVersion = VK_API_VERSION_1_1
+		.apiVersion = VK_API_VERSION_1_1,
 	};
 
+	VkDebugUtilsMessengerCreateInfoEXT
+		debugUtilsMessengerCreateInfo = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+			(const void*)NULL,
+			(VkDebugUtilsMessengerCreateFlagsEXT)0,
+			(VkDebugUtilsMessageSeverityFlagsEXT)VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+			(VkDebugUtilsMessageTypeFlagsEXT)VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+			(PFN_vkDebugUtilsMessengerCallbackEXT)debugCallback,
+			(void*)NULL };
+
+
+	const std::vector<const char*> enabledLayerNames = { "VK_LAYER_KHRONOS_validation" };
 	VkInstanceCreateInfo instanceCreateInfo{
 		.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-		.pNext = nullptr,
+		.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugUtilsMessengerCreateInfo,
 		.flags = 0,
 		.pApplicationInfo = &applicationInfo,
-		.enabledLayerCount = 0,
-		.ppEnabledLayerNames = nullptr,
+		.enabledLayerCount = static_cast<uint32_t>(enabledLayerNames.size()),
+		.ppEnabledLayerNames = enabledLayerNames.data(),
 		.enabledExtensionCount = 0,
 		.ppEnabledExtensionNames = nullptr
 	};
 
 	VkInstance instance;
 	assert(vkCreateInstance(&instanceCreateInfo, nullptr, &instance) == VK_SUCCESS);
+
+	VkDebugUtilsMessengerEXT debugUtilsMessenger;
+	setup_DebugUtilsMessenger(instance, &debugUtilsMessenger);
 
 	// Physical device.
 	uint32_t physicalDeviceCount = 0;
@@ -111,7 +188,7 @@ int main(int argc, char** argv)
 		.physicalDevice = physicalDevice,
 		.device = logicalDevice,
 		.instance = instance,
-		.vulkanApiVersion = physicalDeviceProperties.apiVersion
+		.vulkanApiVersion = applicationInfo.apiVersion
 	};
 
 	VmaAllocator allocator;
@@ -140,7 +217,7 @@ int main(int argc, char** argv)
 
 	// Create compute pipeline.
 	std::vector<char> shaderContents;
-	if (std::ifstream shaderFile{ "D:/Dev/Luci404/HelloVulkanHpp/square.spv", std::ios::binary | std::ios::ate })
+	if (std::ifstream shaderFile{ "D:/Dev/Luci404/HelloVulkanCompute/square.spv", std::ios::binary | std::ios::ate })
 	{
 		const size_t fileSize = shaderFile.tellg();
 		shaderFile.seekg(0);
@@ -233,7 +310,7 @@ int main(int argc, char** argv)
 	};
 
 	VkPipeline computePipeline;
-	assert(vkCreateComputePipelines(logicalDevice, pipelineCache, 0, &computePipelineCreateInfo, nullptr, &computePipeline) == VK_SUCCESS);
+	assert(vkCreateComputePipelines(logicalDevice, pipelineCache, 1, &computePipelineCreateInfo, nullptr, &computePipeline) == VK_SUCCESS);
 
 	// Descriptor set.
 	VkDescriptorPoolSize descriptorPoolSize{
@@ -367,7 +444,7 @@ int main(int argc, char** argv)
 	};
 
 	vkQueueSubmit(queue, 0, &submitInfo, fence);
-	assert(vkWaitForFences(logicalDevice, 1, &fence, true, -1) == VK_SUCCESS);
+	assert(vkWaitForFences(logicalDevice, 1, &fence, true, uint64_t(-1)) == VK_SUCCESS);
 
 	// Read results.
 	vmaMapMemory(allocator, inBufferAllocation, reinterpret_cast<void**>(&inBufferPtr));
@@ -381,73 +458,10 @@ int main(int argc, char** argv)
 	std::cout << std::endl;
 	vmaUnmapMemory(allocator, outBufferAllocation);
 
-	struct BufferInfo
-	{
-		VkBuffer buffer;
-		VmaAllocation allocation;
-	};
-
-	// Lets allocate a couple of buffers to see how they are layed out in memory
-	auto AllocateBuffer = [allocator, computeQueueFamilyIndex](size_t SizeInBytes, VmaMemoryUsage Usage)
-	{
-		vk::BufferCreateInfo bufferCreateInfo{
-			vk::BufferCreateFlags(),					// Flags
-			SizeInBytes,								// Size
-			vk::BufferUsageFlagBits::eStorageBuffer,	// Usage
-			vk::SharingMode::eExclusive,				// Sharing mode
-			1,											// Number of queue family indices
-			&computeQueueFamilyIndex					// List of queue family indices
-		};
-
-		VmaAllocationCreateInfo allocationInfo = {};
-		allocationInfo.usage = Usage;
-
-		BufferInfo info;
-		vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&bufferCreateInfo), &allocationInfo, &info.buffer, &info.allocation, nullptr);
-
-		return info;
-	};
-
-	auto DestroyBuffer = [allocator](BufferInfo info)
-	{
-		vmaDestroyBuffer(allocator, info.buffer, info.allocation);
-	};
-
-	constexpr size_t MB = 1024 * 1024;
-	BufferInfo B1 = AllocateBuffer(4 * MB, VMA_MEMORY_USAGE_CPU_TO_GPU);
-	BufferInfo B2 = AllocateBuffer(10 * MB, VMA_MEMORY_USAGE_GPU_TO_CPU);
-	BufferInfo B3 = AllocateBuffer(20 * MB, VMA_MEMORY_USAGE_GPU_ONLY);
-	BufferInfo B4 = AllocateBuffer(100 * MB, VMA_MEMORY_USAGE_CPU_ONLY);
-
-	{
-		char* statisticsString = nullptr;
-		vmaBuildStatsString(allocator, &statisticsString, true);
-		{
-			std::ofstream file{ "VMAStatistics_2.json" };
-			file << statisticsString;
-		}
-		vmaFreeStatsString(allocator, statisticsString);
-	}
-
-	DestroyBuffer(B1);
-	DestroyBuffer(B2);
-	DestroyBuffer(B3);
-	DestroyBuffer(B4);
-
-
-	{
-		char* statisticsString = nullptr;
-		vmaBuildStatsString(allocator, &statisticsString, true);
-		{
-			std::ofstream file{ "VMAStatistics.json" };
-			file << statisticsString;
-		}
-		vmaFreeStatsString(allocator, statisticsString);
-	}
-
 	vmaDestroyBuffer(allocator, inBuffer, inBufferAllocation);
 	vmaDestroyBuffer(allocator, outBuffer, outBufferAllocation);
 	vmaDestroyAllocator(allocator);
+
 
 	// Cleanup.
 	vkResetCommandPool(logicalDevice, commandPool, 0);
@@ -462,6 +476,8 @@ int main(int argc, char** argv)
 
 	vkDestroyDevice(logicalDevice, nullptr);
 	vkDestroyInstance(instance, nullptr);
+
+	std::cin.get();
 
 	return 0;
 }

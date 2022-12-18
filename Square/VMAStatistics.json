@@ -1,0 +1,314 @@
+{
+  "General": {
+    "API": "Vulkan", 
+    "apiVersion": "1.3.224", 
+    "GPU": "NVIDIA GeForce GTX 1080 Ti", 
+    "deviceType": 2, 
+    "maxMemoryAllocationCount": 4096, 
+    "bufferImageGranularity": 1024, 
+    "nonCoherentAtomSize": 64, 
+    "memoryHeapCount": 3, 
+    "memoryTypeCount": 11
+  }, 
+  "Total": {
+    "BlockCount": 4, 
+    "BlockBytes": 118194176, 
+    "AllocationCount": 2, 
+    "AllocationBytes": 96, 
+    "UnusedRangeCount": 4, 
+    "AllocationSizeMin": 48, 
+    "AllocationSizeMax": 48, 
+    "UnusedRangeSizeMin": 3506128, 
+    "UnusedRangeSizeMax": 67108864
+  }, 
+  "MemoryInfo": {
+    "Heap 0": {
+      "Flags": ["DEVICE_LOCAL"], 
+      "Size": 11660165120, 
+      "Budget": {
+        "BudgetBytes": 9328132096, 
+        "UsageBytes": 67108864
+      }, 
+      "Stats": {
+        "BlockCount": 1, 
+        "BlockBytes": 67108864, 
+        "AllocationCount": 0, 
+        "AllocationBytes": 0, 
+        "UnusedRangeCount": 1
+      }, 
+      "MemoryPools": {
+        "Type 7": {
+          "Flags": ["DEVICE_LOCAL"], 
+          "Stats": {
+            "BlockCount": 1, 
+            "BlockBytes": 67108864, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 1
+          }
+        }
+      }
+    }, 
+    "Heap 1": {
+      "Flags": [], 
+      "Size": 34188099584, 
+      "Budget": {
+        "BudgetBytes": 27350479667, 
+        "UsageBytes": 33554432
+      }, 
+      "Stats": {
+        "BlockCount": 1, 
+        "BlockBytes": 33554432, 
+        "AllocationCount": 1, 
+        "AllocationBytes": 48, 
+        "UnusedRangeCount": 1
+      }, 
+      "MemoryPools": {
+        "Type 0": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 1": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 2": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 3": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 4": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 5": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 6": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 8": {
+          "Flags": ["HOST_VISIBLE", "HOST_COHERENT"], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 9": {
+          "Flags": ["HOST_VISIBLE", "HOST_COHERENT", "HOST_CACHED"], 
+          "Stats": {
+            "BlockCount": 1, 
+            "BlockBytes": 33554432, 
+            "AllocationCount": 1, 
+            "AllocationBytes": 48, 
+            "UnusedRangeCount": 1
+          }
+        }
+      }
+    }, 
+    "Heap 2": {
+      "Flags": ["DEVICE_LOCAL"], 
+      "Size": 224395264, 
+      "Budget": {
+        "BudgetBytes": 179516211, 
+        "UsageBytes": 17530880
+      }, 
+      "Stats": {
+        "BlockCount": 2, 
+        "BlockBytes": 17530880, 
+        "AllocationCount": 1, 
+        "AllocationBytes": 48, 
+        "UnusedRangeCount": 2, 
+        "UnusedRangeSizeMin": 3506128, 
+        "UnusedRangeSizeMax": 14024704
+      }, 
+      "MemoryPools": {
+        "Type 10": {
+          "Flags": ["DEVICE_LOCAL", "HOST_VISIBLE", "HOST_COHERENT"], 
+          "Stats": {
+            "BlockCount": 2, 
+            "BlockBytes": 17530880, 
+            "AllocationCount": 1, 
+            "AllocationBytes": 48, 
+            "UnusedRangeCount": 2, 
+            "UnusedRangeSizeMin": 3506128, 
+            "UnusedRangeSizeMax": 14024704
+          }
+        }
+      }
+    }
+  }, 
+  "DefaultPools": {
+    "Type 0": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 1": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 2": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 3": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 4": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 5": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 6": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 7": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 0, 
+          "TotalBytes": 67108864, 
+          "UnusedBytes": 67108864, 
+          "Allocations": 0, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "FREE", "Size": 67108864}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 8": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 9": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 0, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 33554384, 
+          "Allocations": 1, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 48, "Usage": 32}, 
+            {"Offset": 48, "Type": "FREE", "Size": 33554384}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 10": {
+      "PreferredBlockSize": 28049408, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 0, 
+          "TotalBytes": 3506176, 
+          "UnusedBytes": 3506128, 
+          "Allocations": 1, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 48, "Usage": 32}, 
+            {"Offset": 48, "Type": "FREE", "Size": 3506128}
+          ]
+        }, 
+        "1": {
+          "MapRefCount": 0, 
+          "TotalBytes": 14024704, 
+          "UnusedBytes": 14024704, 
+          "Allocations": 0, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "FREE", "Size": 14024704}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }
+  }, 
+  "CustomPools": {
+  }
+}
